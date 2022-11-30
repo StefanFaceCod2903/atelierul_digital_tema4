@@ -22,12 +22,7 @@ class MyApp extends StatelessWidget {
 class ChooseMovie extends StatelessWidget {
   const ChooseMovie({super.key});
 
-  final List<String> menus = const [
-    'Now Showing',
-    'Cinema',
-    'Coming Soon',
-    'My List'
-  ];
+  final List<String> menus = const ['Now Showing', 'Cinema', 'Coming Soon', 'My List'];
 
   @override
   Widget build(BuildContext context) {
@@ -73,8 +68,7 @@ class ChooseMovie extends StatelessWidget {
                         fontSize: 20,
                         fontWeight: FontWeight.w400,
                         color: Colors.transparent,
-                        decoration:
-                            index == 0 ? TextDecoration.underline : null,
+                        decoration: index == 0 ? TextDecoration.underline : null,
                         decorationColor: Colors.white,
                         shadows: const [
                           Shadow(
