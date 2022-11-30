@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 void main() {
   runApp(const MyApp());
 }
-
+///This app is just for replicating a UI
 class MyApp extends StatelessWidget {
+  ///
   const MyApp({super.key});
 
   @override
@@ -18,11 +19,13 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
+///This is the page where we select a movie
 class ChooseMovie extends StatelessWidget {
+  ///
   const ChooseMovie({super.key});
-
-  final List<String> menus = const ['Now Showing', 'Cinema', 'Coming Soon', 'My List'];
+///here is a list for the menus
+  final List<String> menus =
+  const ['Now Showing', 'Cinema', 'Coming Soon', 'My List'];
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +71,9 @@ class ChooseMovie extends StatelessWidget {
                         fontSize: 20,
                         fontWeight: FontWeight.w400,
                         color: Colors.transparent,
-                        decoration: index == 0 ? TextDecoration.underline : null,
+                        decoration: index == 0 ?
+                        TextDecoration.underline :
+                        null,
                         decorationColor: Colors.white,
                         shadows: const [
                           Shadow(
