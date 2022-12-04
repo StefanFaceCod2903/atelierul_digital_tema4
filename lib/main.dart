@@ -1,13 +1,22 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 
 void main() {
   runApp(const MyApp());
 }
+
 ///This app is just for replicating a UI
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   ///
   const MyApp({super.key});
 
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -19,13 +28,57 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 ///This is the page where we select a movie
-class ChooseMovie extends StatelessWidget {
+class ChooseMovie extends StatefulWidget {
   ///
   const ChooseMovie({super.key});
-///here is a list for the menus
-  final List<String> menus =
-  const ['Now Showing', 'Cinema', 'Coming Soon', 'My List'];
+
+  @override
+  State<ChooseMovie> createState() => _ChooseMovieState();
+}
+
+class _ChooseMovieState extends State<ChooseMovie> {
+  PageController pageController = PageController();
+  bool isLoading = false;
+  List<String> images = [];
+  List<String> titles = [];
+  List<List<String>> genres = [];
+  List<double> ratings = [];
+  List<int> hours = [];
+
+  Future<void> _getMovies() async {
+    const url = 'https://yts.mx/api/v2/list_movies.json';
+    final response = await get(Uri.parse(url));
+    final rawResponse = jsonDecode(response.body) as Map<String, dynamic>;
+    //print(rawResponse['data']['movies']);
+    final data = rawResponse['data'] as Map<String, dynamic>;
+    final movies =
+        List<Map<dynamic, dynamic>>.from(data['movies'] as List<dynamic>);
+    for (final item in movies) {
+      images.add(item['medium_cover_image'] as String);
+      titles.add(item['title'] as String);
+      final rating = item['rating'] as String;
+      ratings.add(double.parse(rating));
+      final duration = item['runtime'] as double;
+      hours.add(duration.round());
+      final currentGenres = <String>[];
+      final genresList = List<dynamic>.from(item['genres'] as List<dynamic>);
+      for (final genre in genresList) {
+        currentGenres.add(genre as String);
+      }
+      genres.add(currentGenres);
+    }
+    setState(() {
+      isLoading = true;
+    });
+  }
+
+  @override
+  void initState() {
+    _getMovies();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,132 +103,73 @@ class ChooseMovie extends StatelessWidget {
             )
           ],
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: ListView.separated(
-                  separatorBuilder: (BuildContext context, int index) {
-                    return const SizedBox(
-                      width: 20,
-                    );
-                  },
-                  padding: const EdgeInsets.all(15),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: menus.length,
-                  itemBuilder: (BuildContext context, index) {
-                    return Text(
-                      menus[index],
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.transparent,
-                        decoration: index == 0 ?
-                        TextDecoration.underline :
-                        null,
-                        decorationColor: Colors.white,
-                        shadows: const [
-                          Shadow(
+        body: isLoading
+            ? PageView.builder(
+                controller: pageController,
+                itemCount: titles.length,
+                itemBuilder: (context, index) {
+                  return Column(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image(
+                            image: NetworkImage(images[index]),
+                            //imageFromAPI,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 20),
+                        child: Text(
+                          titles[index],
+                          style: const TextStyle(
+                            fontSize: 30,
                             color: Colors.white,
-                            offset: Offset(0, -10),
-                          )
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${genres[index].join(", ")} - ${hours[index]} hours',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '${ratings[index]}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 30,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const Text(
+                            'Rating',
+                            style: TextStyle(color: Colors.grey),
+                          ),
                         ],
                       ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 3,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: const Image(
-                  image: NetworkImage(
-                    'https://c7.alamy.com/comp/FXEAGB/avengers-assemble-2012-directed-by-joss-whedon-and-starring-robert-FXEAGB.jpg',
-                  ),
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(top: 20),
-              child: Text(
-                'Avengers',
-                style: TextStyle(
-                  fontSize: 30,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
-            const Text(
-              'Aventure and superheroes - 2 hours',
-              style: TextStyle(color: Colors.grey),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
-                      '7.9',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w700,
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          side: const BorderSide(
+                            color: Colors.white,
+                          ),
+                        ),
+                        child: const Text('View more'),
                       ),
-                    ),
-                    Text('IMBD', style: TextStyle(color: Colors.grey)),
-                  ],
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
-                      '80%',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'Rotten Tomatoes',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
-                      '90%',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text('Metascore', style: TextStyle(color: Colors.grey)),
-                  ],
-                ),
-              ],
-            ),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                side: const BorderSide(
-                  color: Colors.white,
-                ),
+                    ],
+                  );
+                },
+              )
+            : const Center(
+                child: Icon(Icons.downloading),
               ),
-              child: const Text('Buy tickets'),
-            ),
-          ],
-        ),
       ),
     );
   }
